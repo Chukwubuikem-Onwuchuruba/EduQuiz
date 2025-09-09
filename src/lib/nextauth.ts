@@ -1,7 +1,6 @@
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import { DefaultSession, NextAuthOptions } from "next-auth";
-import client from "./db";
-import User from "../../mongoDB/User";
+import { DefaultSession, getServerSession, NextAuthOptions } from "next-auth";
+import clientPromise from "./db";
 import GoogleProvider from "next-auth/providers/google";
 
 declare module "next-auth" {
@@ -24,14 +23,15 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    jwt: async ({ token }) => {
-      const db_user = await User.findOne({ email: token?.email });
-      if (db_user) {
-        token.id = db_user.id;
+    async jwt({ token }) {
+      // With MongoDBAdapter, NextAuth automatically stores users in "users" collection
+      // You can just set `id` from token.sub (which NextAuth assigns to userId)
+      if (token.sub) {
+        token.id = token.sub;
       }
       return token;
     },
-    session: ({ session, token }) => {
+    session({ session, token }) {
       if (token) {
         session.user.id = token.id;
         session.user.name = token.name;
@@ -41,7 +41,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  adapter: MongoDBAdapter(client),
+  adapter: MongoDBAdapter(clientPromise),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -49,3 +49,5 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 };
+
+export const getAuthSession = () => getServerSession(authOptions);

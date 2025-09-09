@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Types } from "mongoose";
+import mongoose, { Document, Model, Schema, Types } from "mongoose";
 import { IAccount } from "./Account";
 import { ISession } from "./Session";
 
@@ -52,4 +52,8 @@ userSchema.virtual("sessions", {
   foreignField: "userId",
 });
 
-export default mongoose.model<IUser>("User", userSchema);
+// Check if the model already exists before compiling and exporting
+const User = (mongoose.models.User ||
+  mongoose.model<IUser>("User", userSchema)) as Model<IUser>;
+
+export default User;
