@@ -25,23 +25,53 @@ import {
 import { Input } from "@/components/ui/input";
 import { BookOpen, CopyCheck } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 
 type Input = z.infer<typeof quizCreationSchema>;
 
 const QuizCreation = (props: Props) => {
+  const router = useRouter();
+  const { mutate: getQuestions, isPending } = useMutation({
+    mutationFn: async ({ amount, topic, type }: Input) => {
+      const response = await axios.post("/api/quiz", {
+        amount,
+        topic,
+        type,
+      });
+      return response.data;
+    },
+  });
+
   const form = useForm<Input>({
     resolver: zodResolver(quizCreationSchema),
     defaultValues: {
-      amount: 5,
+      amount: 3,
       topic: "",
       type: "mcq",
     },
   });
 
   function onSubmit(input: Input) {
-    alert(JSON.stringify(input, null, 2));
+    getQuestions(
+      {
+        amount: input.amount,
+        topic: input.topic,
+        type: input.type,
+      },
+      {
+        onSuccess: ({ quizId }) => {
+          if (form.getValues("type") == "open_ended") {
+            router.push(`/take-quiz/open-ended/${quizId}`);
+          } else {
+            router.push(`/take-quiz/mcq/${quizId}`);
+          }
+        },
+      }
+    );
   }
 
   form.watch();
@@ -84,8 +114,8 @@ const QuizCreation = (props: Props) => {
                           form.setValue("amount", parseInt(e.target.value));
                         }}
                         type="number"
-                        min={5}
-                        max={20}
+                        min={3}
+                        max={10}
                       />
                     </FormControl>
                     <FormDescription>Please provide a topic.</FormDescription>
@@ -122,7 +152,9 @@ const QuizCreation = (props: Props) => {
                   <BookOpen className="w-4 h-4 mr-2" /> Open Ended
                 </Button>
               </div>
-              <Button type="submit">Submit</Button>
+              <Button disabled={isPending} type="submit">
+                Submit
+              </Button>
             </form>
           </Form>
         </CardContent>

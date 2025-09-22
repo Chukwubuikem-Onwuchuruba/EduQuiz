@@ -65,4 +65,6 @@ quizSchema.virtual("user", {
   justOne: true,
 });
 
-export default mongoose.model<IQuiz>("Quiz", quizSchema);
+const Quiz = mongoose.models.Quiz || mongoose.model<IQuiz>("Quiz", quizSchema);
+
+export default Quiz;

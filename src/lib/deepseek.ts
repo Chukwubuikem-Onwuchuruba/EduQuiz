@@ -1,14 +1,17 @@
 import { OpenAI } from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Use DeepSeek's OpenAI-compatible endpoint
+const deepseek = new OpenAI({
+  baseURL: "https://api.deepseek.com",
+  apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
+// Then use the same openai.chat.completions.create() calls
 interface OutputFormat {
   [key: string]: string | string[] | OutputFormat;
 }
 
-export async function strict_output(
+export async function strict_output_deepseek(
   system_prompt: string,
   user_prompt: string | string[],
   output_format: OutputFormat,
@@ -54,7 +57,7 @@ export async function strict_output(
     }
 
     // Use OpenAI to get a response
-    const response = await openai.chat.completions.create({
+    const response = await deepseek.chat.completions.create({
       temperature,
       model,
       messages: [

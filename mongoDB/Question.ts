@@ -64,4 +64,7 @@ questionSchema.virtual("quiz", {
   justOne: true,
 });
 
-export default mongoose.model<IQuestion>("Question", questionSchema);
+const Question =
+  mongoose.models.Question ||
+  mongoose.model<IQuestion>("Question", questionSchema);
+export default Question;

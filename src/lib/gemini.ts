@@ -1,20 +1,18 @@
-import { OpenAI } from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const gemini_model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
 interface OutputFormat {
   [key: string]: string | string[] | OutputFormat;
 }
 
-export async function strict_output(
+export async function strict_output_gemini(
   system_prompt: string,
   user_prompt: string | string[],
   output_format: OutputFormat,
   default_category: string = "",
   output_value_only: boolean = false,
-  model: string = "gpt-3.5-turbo",
   temperature: number = 1,
   num_tries: number = 2,
   verbose: boolean = false
@@ -53,24 +51,23 @@ export async function strict_output(
       output_format_prompt += `\nGenerate a list of json, one json for each input element.`;
     }
 
-    // Use OpenAI to get a response
-    const response = await openai.chat.completions.create({
-      temperature,
-      model,
-      messages: [
-        {
-          role: "system",
-          content: system_prompt + output_format_prompt + error_msg,
-        },
-        { role: "user", content: user_prompt.toString() },
-      ],
-    });
+    // Combine system and user prompts
+    const prompt = `${system_prompt} ${output_format_prompt} ${error_msg} \nUser prompt: ${user_prompt.toString()}`;
 
-    let res: string =
-      response.choices[0].message?.content?.replace(/'/g, '"') ?? "";
+    // Use Gemini to get a response
+    const result = await gemini_model.generateContent(prompt);
+    const response = await result.response;
+    // const res: string = response.text().replace(/'/g, '"') ?? "";
+    let res: string = response.text() ?? "";
+
+    // **NEW CODE:** Remove the markdown code block fences and content.
+    const jsonMatch = res.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch && jsonMatch[1]) {
+      res = jsonMatch[1];
+    }
 
     // ensure that we don't replace away apostrophes in text
-    res = res.replace(/(\w)"(\w)/g, "$1'$2");
+    const finalRes = res.replace(/(\w)"(\w)/g, "$1'$2");
 
     if (verbose) {
       console.log(
@@ -78,12 +75,12 @@ export async function strict_output(
         system_prompt + output_format_prompt + error_msg
       );
       console.log("\nUser prompt:", user_prompt);
-      console.log("\nGPT response:", res);
+      console.log("\nGemini response:", finalRes);
     }
 
     // try-catch block to ensure output format is adhered to
     try {
-      let output: any = JSON.parse(res);
+      let output: any = JSON.parse(finalRes);
 
       if (list_input) {
         if (!Array.isArray(output)) {
@@ -136,9 +133,9 @@ export async function strict_output(
 
       return list_input ? output : output[0];
     } catch (e) {
-      error_msg = `\n\nResult: ${res}\n\nError message: ${e}`;
+      error_msg = `\n\nResult: ${finalRes}\n\nError message: ${e}`;
       console.log("An exception occurred:", e);
-      console.log("Current invalid json format:", res);
+      console.log("Current invalid json format:", finalRes);
     }
   }
 
