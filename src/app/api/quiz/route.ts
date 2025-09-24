@@ -64,7 +64,7 @@ export async function POST(req: Request, res: Response) {
             question.option1,
             question.option2,
             question.option3,
-            question.answer,
+            // question.answer, it was adding it double
           ].sort(() => Math.random() - 0.5);
           return {
             question: question.question,
