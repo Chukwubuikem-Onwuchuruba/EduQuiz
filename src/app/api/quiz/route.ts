@@ -75,7 +75,12 @@ export async function POST(req: Request, res: Response) {
           };
         }
       );
-      await Question.insertMany(manyData);
+      const inserted = await Question.insertMany(manyData);
+
+      // 🔑 link questions back to quiz
+      await Quiz.findByIdAndUpdate(quiz._id, {
+        $set: { questions: inserted.map((q) => q._id) },
+      });
     } else if (type === "open_ended") {
       type openEndedQuestion = {
         question: string;
@@ -89,7 +94,12 @@ export async function POST(req: Request, res: Response) {
           questionType: "open_ended",
         };
       });
-      await Question.insertMany(manyData);
+      const inserted = await Question.insertMany(manyData);
+
+      // 🔑 link questions back to quiz
+      await Quiz.findByIdAndUpdate(quiz._id, {
+        $set: { questions: inserted.map((q) => q._id) },
+      });
     }
     return NextResponse.json({ quizId: quiz._id }, { status: 200 });
   } catch (error) {
