@@ -59,17 +59,19 @@ export async function POST(req: Request, res: Response) {
       };
       const manyData = data.questions.map(
         (question: multipleChoiceQuestion) => {
-          // mix up the options
           const options = [
             question.option1,
             question.option2,
             question.option3,
-            // question.answer, it was adding it double
-          ].sort(() => Math.random() - 0.5);
+            question.answer,
+          ];
+          const uniqueOptions = [...new Set(options)];
+          // mix up the options
+          const shuffledOptions = uniqueOptions.sort(() => Math.random() - 0.5);
           return {
             question: question.question,
             answer: question.answer,
-            options: JSON.stringify(options),
+            options: JSON.stringify(shuffledOptions),
             quizId: quiz._id,
             questionType: "mcq",
           };

@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import LoadingQuestions from "./LoadingQuestions";
 
 type Props = {};
 
@@ -35,6 +36,8 @@ type Input = z.infer<typeof quizCreationSchema>;
 
 const QuizCreation = (props: Props) => {
   const router = useRouter();
+  const [showLoader, setShowLoader] = React.useState(false);
+  const [finishedLoading, setFinishedLoading] = React.useState(false);
   const { mutate: getQuestions, isPending } = useMutation({
     mutationFn: async ({ amount, topic, type }: Input) => {
       const response = await axios.post("/api/quiz", {
@@ -56,6 +59,7 @@ const QuizCreation = (props: Props) => {
   });
 
   function onSubmit(input: Input) {
+    setShowLoader(true);
     getQuestions(
       {
         amount: input.amount,
@@ -64,17 +68,31 @@ const QuizCreation = (props: Props) => {
       },
       {
         onSuccess: ({ quizId }) => {
+          setFinishedLoading(true);
+          setTimeout(() => {
+            if (form.getValues("type") === "mcq") {
+              router.push(`/take-quiz/mcq/${quizId}`);
+            } else if (form.getValues("type") === "open_ended") {
+              router.push(`/take-quiz/open-ended/${quizId}`);
+            }
+          }, 2000);
           if (form.getValues("type") == "open_ended") {
             router.push(`/take-quiz/open-ended/${quizId}`);
           } else {
             router.push(`/take-quiz/mcq/${quizId}`);
           }
         },
+        onError: () => {
+          setShowLoader(false);
+        },
       }
     );
   }
 
   form.watch();
+  if (showLoader) {
+    return <LoadingQuestions finished={finishedLoading} />;
+  }
 
   return (
     <div className="absolute -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">

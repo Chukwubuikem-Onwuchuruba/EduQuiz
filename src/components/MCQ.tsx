@@ -37,7 +37,7 @@ const MCQ = ({ quiz }: Props) => {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [hasEnded]);
 
   const currentQuestion = React.useMemo(() => {
     return quiz.questions[questionIndex];
