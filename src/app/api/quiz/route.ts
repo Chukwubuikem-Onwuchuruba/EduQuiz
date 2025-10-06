@@ -3,11 +3,11 @@ import { quizCreationSchema } from "@/schemas/form/quiz";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import Quiz from "../../../../mongoDB/Quiz";
-import TopicCount from "../../../../mongoDB/TopicCount";
 import axios from "axios";
 import Question from "../../../../mongoDB/Question";
 import mongoose from "mongoose";
 import dbConnect from "@/lib/mongoose";
+import TopicCount from "../../../../mongoDB/TopicCount";
 
 await dbConnect();
 
@@ -41,6 +41,14 @@ export async function POST(req: Request, res: Response) {
       userId: session.user.id,
       topic,
     });
+    await TopicCount.findOneAndUpdate(
+      { topic }, // where clause (filter)
+      { $inc: { count: 1 } }, // update: increment count by 1
+      {
+        upsert: true, // create if doesn't exist
+        new: true, // return the updated document
+      }
+    );
     console.log("Quiz created:", quiz);
     console.log("Calling questions API...");
     const { data } = await axios.post(`${process.env.API_URL}/api/questions`, {
@@ -119,12 +127,3 @@ export async function POST(req: Request, res: Response) {
     );
   }
 }
-
-// await TopicCount.findOneAndUpdate(
-//       { topic }, // where clause (filter)
-//       { $inc: { count: 1 } }, // update: increment count by 1
-//       {
-//         upsert: true, // create if doesn't exist
-//         new: true, // return the updated document
-//       }
-//     );

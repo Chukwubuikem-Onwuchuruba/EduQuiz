@@ -15,5 +15,5 @@ export const checkAnswerSchema = z.object({
 });
 
 export const endQuizSchema = z.object({
-  gameId: z.string(),
+  quizId: z.string(),
 });

@@ -22,16 +22,9 @@ const Statistics = async ({ params: { quizId } }: Props) => {
   if (!session?.user) {
     return redirect("/");
   }
-  await connectDB(); // Connect to database
-
-  //   const quiz = await Quiz.findById(quizId)
-  //     .populate({
-  //       path: "questions",
-  //       select: "_id question",
-  //     })
-  //     .exec();
+  await connectDB();
   const rawQuiz = await Quiz.findById(quizId)
-    .populate("questions") // No select = includes ALL question fields
+    .populate("questions")
     .lean()
     .exec();
   if (!rawQuiz) {

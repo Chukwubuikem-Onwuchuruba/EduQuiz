@@ -31,7 +31,7 @@ const OpenEnded = ({ quiz }: Props) => {
   const { mutate: endQuiz } = useMutation({
     mutationFn: async () => {
       const payload: z.infer<typeof endQuizSchema> = {
-        gameId: quiz.id,
+        quizId: quiz.id,
       };
       const response = await axios.post(`/api/endQuiz`, payload);
       return response.data;
