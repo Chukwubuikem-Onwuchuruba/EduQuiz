@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import HistoryComponent from "../HistoryComponent";
 import Quiz from "../../../mongoDB/Quiz";
+import connectDB from "@/lib/mongoose";
 
 type Props = {};
 
@@ -19,6 +20,7 @@ const RecentActivities = async (props: Props) => {
   if (!session?.user) {
     return redirect("/");
   }
+  await connectDB();
   const quizCount = await Quiz.countDocuments({
     userId: session.user.id,
   }).exec();
