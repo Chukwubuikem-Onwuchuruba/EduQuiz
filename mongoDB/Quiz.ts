@@ -14,6 +14,7 @@ export interface IQuiz extends Document {
   timeEnded?: Date;
   topic: string;
   quizType: QuizType;
+  difficulty: "easy" | "intermediate" | "hard";
   user?: IUser; // virtual population
   createdAt: Date;
   updatedAt: Date;
@@ -47,6 +48,12 @@ const quizSchema: Schema = new Schema(
     quizType: {
       type: String,
       enum: Object.values(QuizType),
+      required: true,
+    },
+    difficulty: {
+      type: String,
+      enum: ["easy", "intermediate", "hard"],
+      default: "intermediate", // Set default to intermediate
       required: true,
     },
   },

@@ -45,8 +45,8 @@ const topicCountSchema: Schema = new Schema({
   },
 });
 
-// Index for faster queries
-topicCountSchema.index({ topic: 1 });
+// // Index for faster queries
+// topicCountSchema.index({ topic: 1 });
 
 // ✅ Check if model already exists before creating it
 const TopicCount =

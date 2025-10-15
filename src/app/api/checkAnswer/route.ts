@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import Question from "../../../../mongoDB/Question";
 import connectDB from "@/lib/mongoose";
 import stringSimilarity, { compareTwoStrings } from "string-similarity";
+import { evaluateAnswer } from "@/lib/answerEvaluation";
 
 connectDB();
 
@@ -37,23 +38,14 @@ export async function POST(req: Request, res: Response) {
         }
       );
     } else if (question.questionType === "open_ended") {
-      let percentageSimilar = stringSimilarity.compareTwoStrings(
-        question.answer.toLowerCase().trim(),
-        userAnswer.toLowerCase().trim()
-      );
-      percentageSimilar = Math.round(percentageSimilar * 100);
-      Question.updateOne(
+      let percentageSimilar = evaluateAnswer(question.answer, userAnswer);
+
+      await Question.updateOne(
         { _id: questionId },
         { percentageCorrect: percentageSimilar }
       );
-      return NextResponse.json(
-        {
-          percentageSimilar,
-        },
-        {
-          status: 200,
-        }
-      );
+
+      return NextResponse.json({ percentageSimilar }, { status: 200 });
     }
   } catch (error) {
     if (error instanceof ZodError) {

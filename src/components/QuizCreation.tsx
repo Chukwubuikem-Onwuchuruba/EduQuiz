@@ -23,12 +23,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { BookOpen, CopyCheck } from "lucide-react";
+import {
+  BookOpen,
+  CopyCheck,
+  ChevronDown,
+  ChevronUp,
+  Star,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import LoadingQuestions from "./LoadingQuestions";
+import { commonTopics, filterTopics } from "@/lib/topics";
 
 type Props = {
   topicParam: string;
@@ -40,6 +47,10 @@ const QuizCreation = ({ topicParam }: Props) => {
   const router = useRouter();
   const [showLoader, setShowLoader] = React.useState(false);
   const [finishedLoading, setFinishedLoading] = React.useState(false);
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  const [filteredTopics, setFilteredTopics] = React.useState<string[]>([]);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
   const { mutate: getQuestions, isPending } = useMutation({
     mutationFn: async ({ amount, topic, type }: Input) => {
       const response = await axios.post("/api/quiz", {
@@ -60,6 +71,27 @@ const QuizCreation = ({ topicParam }: Props) => {
     },
   });
 
+  // Filter topics based on input
+  React.useEffect(() => {
+    const currentTopic = form.getValues("topic");
+    setFilteredTopics(filterTopics(currentTopic, commonTopics));
+  }, [form.watch("topic")]);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   function onSubmit(input: Input) {
     setShowLoader(true);
     getQuestions(
@@ -78,11 +110,6 @@ const QuizCreation = ({ topicParam }: Props) => {
               router.push(`/take-quiz/open-ended/${quizId}`);
             }
           }, 2000);
-          if (form.getValues("type") == "open_ended") {
-            router.push(`/take-quiz/open-ended/${quizId}`);
-          } else {
-            router.push(`/take-quiz/mcq/${quizId}`);
-          }
         },
         onError: () => {
           setShowLoader(false);
@@ -91,7 +118,15 @@ const QuizCreation = ({ topicParam }: Props) => {
     );
   }
 
-  form.watch();
+  const handleTopicSelect = (topic: string) => {
+    form.setValue("topic", topic);
+    setShowDropdown(false);
+  };
+
+  const handleInputFocus = () => {
+    setShowDropdown(true);
+  };
+
   if (showLoader) {
     return <LoadingQuestions finished={finishedLoading} />;
   }
@@ -113,13 +148,54 @@ const QuizCreation = ({ topicParam }: Props) => {
                   <FormItem>
                     <FormLabel>Topic</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter a topic..." {...field} />
+                      <div className="relative" ref={dropdownRef}>
+                        <Input
+                          placeholder="Enter a topic or choose from suggestions..."
+                          {...field}
+                          onFocus={handleInputFocus}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setShowDropdown(true);
+                          }}
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowDropdown(!showDropdown)}
+                        >
+                          {showDropdown ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+
+                        {showDropdown && filteredTopics.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                            {filteredTopics.map((topic) => (
+                              <div
+                                key={topic}
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-100 first:rounded-t-md last:rounded-b-md"
+                                onClick={() => handleTopicSelect(topic)}
+                              >
+                                {topic}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
-                    <FormDescription>Please provide a topic.</FormDescription>
+                    <FormDescription>
+                      Start typing or choose from common topics
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="amount"
@@ -134,17 +210,19 @@ const QuizCreation = ({ topicParam }: Props) => {
                           form.setValue("amount", parseInt(e.target.value));
                         }}
                         type="number"
-                        // min={3}
                         min={1}
                         max={10}
                       />
                     </FormControl>
-                    <FormDescription>Please provide a topic.</FormDescription>
+                    <FormDescription>
+                      Choose between 1 and 10 questions
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="flex justify between">
+
+              <div className="flex justify-between">
                 <Button
                   className="w-1/2 rounded-none rounded-l-lg"
                   variant={
@@ -173,6 +251,7 @@ const QuizCreation = ({ topicParam }: Props) => {
                   <BookOpen className="w-4 h-4 mr-2" /> Open Ended
                 </Button>
               </div>
+
               <Button disabled={isPending} type="submit">
                 Submit
               </Button>
