@@ -28,7 +28,7 @@ export async function POST(req: Request, res: Response) {
       const isCorrect =
         question.answer.toLowerCase().trim() ===
         userAnswer.toLowerCase().trim();
-      Question.updateOne({ _id: questionId }, { isCorrect: isCorrect });
+      await Question.updateOne({ _id: questionId }, { isCorrect: isCorrect });
       return NextResponse.json(
         {
           isCorrect,

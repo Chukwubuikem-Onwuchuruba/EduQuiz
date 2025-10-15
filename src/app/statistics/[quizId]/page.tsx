@@ -64,7 +64,7 @@ const Statistics = async ({ params: { quizId } }: Props) => {
         </div>
 
         <div className="grid gap-4 mt-4 md:grid-cols-7">
-          <ResultsCard accuracy={accuracy} />
+          <ResultsCard accuracy={accuracy} difficulty={quiz.difficulty} />
           <AccuracyCard accuracy={accuracy} />
           <TimeTakenCard
             timeEnded={new Date(quiz.timeEnded ?? 0)}

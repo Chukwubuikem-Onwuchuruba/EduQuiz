@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "./ui/card";
 import { useForm } from "react-hook-form";
-import { quizCreationSchema } from "@/schemas/form/quiz";
+import { quizCreationSchema, QuizCreationSchema } from "@/schemas/form/quiz";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "./ui/button";
@@ -52,22 +52,29 @@ const QuizCreation = ({ topicParam }: Props) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const { mutate: getQuestions, isPending } = useMutation({
-    mutationFn: async ({ amount, topic, type }: Input) => {
+    mutationFn: async ({
+      amount,
+      topic,
+      type,
+      difficulty,
+    }: QuizCreationSchema) => {
       const response = await axios.post("/api/quiz", {
         amount,
         topic,
         type,
+        difficulty,
       });
       return response.data;
     },
   });
 
-  const form = useForm<Input>({
+  const form = useForm<QuizCreationSchema>({
     resolver: zodResolver(quizCreationSchema),
     defaultValues: {
       amount: 3,
       topic: topicParam,
       type: "mcq",
+      difficulty: "intermediate",
     },
   });
 
@@ -92,30 +99,23 @@ const QuizCreation = ({ topicParam }: Props) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function onSubmit(input: Input) {
+  function onSubmit(input: QuizCreationSchema) {
     setShowLoader(true);
-    getQuestions(
-      {
-        amount: input.amount,
-        topic: input.topic,
-        type: input.type,
+    getQuestions(input, {
+      onSuccess: ({ quizId }) => {
+        setFinishedLoading(true);
+        setTimeout(() => {
+          if (form.getValues("type") === "mcq") {
+            router.push(`/take-quiz/mcq/${quizId}`);
+          } else if (form.getValues("type") === "open_ended") {
+            router.push(`/take-quiz/open-ended/${quizId}`);
+          }
+        }, 2000);
       },
-      {
-        onSuccess: ({ quizId }) => {
-          setFinishedLoading(true);
-          setTimeout(() => {
-            if (form.getValues("type") === "mcq") {
-              router.push(`/take-quiz/mcq/${quizId}`);
-            } else if (form.getValues("type") === "open_ended") {
-              router.push(`/take-quiz/open-ended/${quizId}`);
-            }
-          }, 2000);
-        },
-        onError: () => {
-          setShowLoader(false);
-        },
-      }
-    );
+      onError: () => {
+        setShowLoader(false);
+      },
+    });
   }
 
   const handleTopicSelect = (topic: string) => {
@@ -218,6 +218,61 @@ const QuizCreation = ({ topicParam }: Props) => {
                       Choose between 1 and 10 questions
                     </FormDescription>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="difficulty"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Difficulty</FormLabel>
+                    <div className="flex justify-between">
+                      <Button
+                        className="w-1/3 rounded-none rounded-l-lg"
+                        variant={
+                          form.getValues("difficulty") === "easy"
+                            ? "default"
+                            : "secondary"
+                        }
+                        onClick={() => form.setValue("difficulty", "easy")}
+                        type="button"
+                      >
+                        Easy
+                      </Button>
+                      <Separator orientation="vertical" />
+                      <Button
+                        className="w-1/3 rounded-none"
+                        variant={
+                          form.getValues("difficulty") === "intermediate"
+                            ? "default"
+                            : "secondary"
+                        }
+                        onClick={() =>
+                          form.setValue("difficulty", "intermediate")
+                        }
+                        type="button"
+                      >
+                        Intermediate
+                      </Button>
+                      <Separator orientation="vertical" />
+                      <Button
+                        className="w-1/3 rounded-none rounded-r-lg"
+                        variant={
+                          form.getValues("difficulty") === "hard"
+                            ? "default"
+                            : "secondary"
+                        }
+                        onClick={() => form.setValue("difficulty", "hard")}
+                        type="button"
+                      >
+                        Hard
+                      </Button>
+                    </div>
+                    <FormDescription>
+                      Choose the quiz difficulty
+                    </FormDescription>
                   </FormItem>
                 )}
               />

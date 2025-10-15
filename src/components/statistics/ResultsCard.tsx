@@ -2,9 +2,21 @@ import React from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award, Trophy } from "lucide-react";
-type Props = { accuracy: number };
+type Props = {
+  accuracy: number;
+  difficulty: "easy" | "intermediate" | "hard";
+};
 
-const ResultsCard = ({ accuracy }: Props) => {
+const ResultsCard = ({ accuracy, difficulty }: Props) => {
+  const difficultyColor =
+    difficulty === "easy"
+      ? "text-green-500"
+      : difficulty === "intermediate"
+      ? "text-yellow-500"
+      : "text-red-500";
+
+  const difficultyLabel =
+    difficulty?.charAt(0).toUpperCase() + difficulty?.slice(1) || "Unknown";
   return (
     <Card className="md:col-span-7">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
@@ -43,6 +55,9 @@ const ResultsCard = ({ accuracy }: Props) => {
             </div>
           </>
         )}
+        <div className={`mt-4 text-lg font-semibold ${difficultyColor}`}>
+          Difficulty: {difficultyLabel}
+        </div>
       </CardContent>
     </Card>
   );

@@ -33,13 +33,14 @@ export async function POST(req: Request, res: Response) {
     }
     const body = await req.json();
     console.log("Request body:", body);
-    const { amount, topic, type } = quizCreationSchema.parse(body);
+    const { amount, topic, type, difficulty } = quizCreationSchema.parse(body);
     console.log("Parsed data:", { amount, topic, type });
     const quiz = await Quiz.create({
       quizType: type,
       timeStarted: new Date(),
       userId: session.user.id,
       topic,
+      difficulty,
     });
     await TopicCount.findOneAndUpdate(
       { topic }, // where clause (filter)
@@ -55,6 +56,7 @@ export async function POST(req: Request, res: Response) {
       amount,
       topic,
       type,
+      difficulty,
     });
     console.log("Questions API response:", data);
     if (type === "mcq") {
