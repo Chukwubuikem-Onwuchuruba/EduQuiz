@@ -1,3 +1,42 @@
+// "use client";
+
+// import { useTheme } from "next-themes";
+// import React, { useEffect, useRef } from "react";
+// import { useRouter } from "next/navigation";
+// import WordCloud from "react-d3-cloud";
+
+// type Props = {
+//   formattedTopics: { text: string; value: number }[];
+// };
+
+// const fontSizeMapper = (word: { value: number }) => {
+//   return Math.log2(word.value) * 5 + 16;
+// };
+
+// const CustomWordCloud = ({ formattedTopics }: Props) => {
+//   const theme = useTheme();
+//   const router = useRouter();
+
+//   return (
+//     <>
+//       <WordCloud
+//         data={formattedTopics}
+//         height={550}
+//         font="Times"
+//         fontSize={fontSizeMapper}
+//         rotate={0}
+//         padding={10}
+//         fill={theme.theme === "dark" ? "white" : "black"}
+//         onWordClick={(e, d) => {
+//           router.push("/quiz?topic=" + d.text);
+//         }}
+//       />
+//     </>
+//   );
+// };
+
+// export default CustomWordCloud;
+
 "use client";
 
 import { useTheme } from "next-themes";
@@ -5,8 +44,13 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import WordCloud from "react-d3-cloud";
 
+type Word = {
+  text: string;
+  value: number;
+};
+
 type Props = {
-  formattedTopics: { text: string; value: number }[];
+  formattedTopics: Word[];
 };
 
 const fontSizeMapper = (word: { value: number }) => {
@@ -16,6 +60,7 @@ const fontSizeMapper = (word: { value: number }) => {
 const CustomWordCloud = ({ formattedTopics }: Props) => {
   const theme = useTheme();
   const router = useRouter();
+
   return (
     <>
       <WordCloud
@@ -28,6 +73,12 @@ const CustomWordCloud = ({ formattedTopics }: Props) => {
         fill={theme.theme === "dark" ? "white" : "black"}
         onWordClick={(e, d) => {
           router.push("/quiz?topic=" + d.text);
+        }}
+        onWordMouseOver={(e: any, d: Word) => {
+          e.target.style.cursor = "pointer";
+        }}
+        onWordMouseOut={(e: any, d: Word) => {
+          e.target.style.cursor = "default";
         }}
       />
     </>
