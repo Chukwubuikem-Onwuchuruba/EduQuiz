@@ -10,6 +10,9 @@ import TimeTakenCard from "@/components/statistics/TimeTakenCard";
 import QuestionsList from "@/components/statistics/QuestionsList";
 import connectDB from "@/lib/mongoose";
 import Quiz from "../../../../mongoDB/Quiz";
+import AccuracyTrendChart from "@/components/statistics/AccuracyTrendChart";
+import PerformanceRadar from "@/components/statistics/PerformanceRadar";
+import ScoreDistribution from "@/components/statistics/ScoreDistribution";
 
 type Props = {
   params: {
@@ -70,6 +73,19 @@ const Statistics = async ({ params: { quizId } }: Props) => {
             timeEnded={new Date(quiz.timeEnded ?? 0)}
             timeStarted={new Date(quiz.timeStarted ?? 0)}
           />
+        </div>
+
+        {/* New Visualization Section */}
+        <div className="grid gap-6 mt-8 md:grid-cols-2">
+          <div className="p-4 border rounded-lg">
+            <ScoreDistribution accuracy={accuracy} />
+          </div>
+          <div className="p-4 border rounded-lg">
+            <AccuracyTrendChart questions={quiz.questions} />
+          </div>
+          <div className="p-4 border rounded-lg md:col-span-2">
+            <PerformanceRadar questions={quiz.questions} />
+          </div>
         </div>
         <QuestionsList questions={quiz.questions} />
       </div>
