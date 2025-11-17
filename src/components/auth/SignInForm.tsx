@@ -325,6 +325,17 @@ const SignInForm = () => {
                 </div>
               )}
 
+              {showPassword && (
+                <div className="flex justify-end">
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              )}
+
               {error && (
                 <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
                   {error}
